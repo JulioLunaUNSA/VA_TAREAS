@@ -6,3 +6,4 @@
 - Convolución
 - Filtro de mediana
 - Interpolación bicúbica
+- Interpolación bilineal
