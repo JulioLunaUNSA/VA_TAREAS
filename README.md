@@ -7,3 +7,7 @@
 - Filtro de mediana
 - Interpolación bicúbica
 - Interpolación bilineal
+### INTEGRANTES
+- Acuña Melo, Edgar
+- López Torres Herrera, Luis Rodrigo
+- Luna Flores, Julio Paolo
