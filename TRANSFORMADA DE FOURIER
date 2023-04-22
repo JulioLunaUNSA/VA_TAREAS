@@ -1,0 +1,86 @@
+import numpy as np
+import pandas as pd
+import cv2 as cv 
+from google.colab.patches import cv2_imshow # for image display
+from skimage import io
+from PIL import Image 
+import matplotlib.pylab as plt
+import math
+
+# Create a list to store the urls of the images
+urls = ["https://iiif.lib.ncsu.edu/iiif/0052574/full/800,/0/default.jpg",
+       "https://iiif.lib.ncsu.edu/iiif/0016007/full/800,/0/default.jpg",
+       "https://placekitten.com/800/571",
+       "https://newspack-hipertextual.s3.eu-west-3.amazonaws.com/wp-content/uploads/2010/04/tux-vikingo.jpg",
+       "https://superpet.pe/12997-cart_default/proplan-adulto-sensitive-razas-pequenas.jpg"]  
+     
+     
+#FFT 2D of an image
+
+def calculate_2dft(input):
+    ft = np.fft.ifftshift(input)
+    ft = np.fft.fft2(ft)
+    return np.fft.fftshift(ft)
+
+img = io.imread(urls[4])
+img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+
+dst = calculate_2dft(img)
+
+cv2_imshow(img)
+print('\n')
+cv2_imshow(dst)
+print('\n')
+
+# RECURSIVO FFT en 1D
+
+def FFT(x):
+    N = len(x)
+    
+    if N == 1:
+        return x
+    else:
+        X_even = FFT(x[::2])
+        X_odd = FFT(x[1::2])
+        factor = \
+          np.exp(-2j*np.pi*np.arange(N)/ N)
+        
+        X = np.concatenate(\
+            [X_even+factor[:int(N/2)]*X_odd,
+             X_even+factor[int(N/2):]*X_odd])
+        return X
+
+x = np.random.random(1024)
+np.allclose(FFT(x), np.fft.fft(x))
+
+
+
+# ITERATIVO FFT en 1D
+
+def FFT_vectorized(x):
+    x = np.asarray(x, dtype=float)
+    N = x.shape[0]
+
+    if np.log2(N) % 1 > 0:
+        raise ValueError("size of x must be a power of 2")
+
+    #debe ser potencia de 2
+    N_min = min(N, 32)
+    
+    n = np.arange(N_min)
+    k = n[:, None]
+    M = np.exp(-2j * np.pi * n * k / N_min)
+    X = np.dot(M, x.reshape((N_min, -1)))
+
+    while X.shape[0] < N:
+        X_even = X[:, :X.shape[1] // 2]
+        X_odd = X[:, X.shape[1] // 2:]
+        factor = np.exp(-1j * np.pi * np.arange(X.shape[0])
+                        / X.shape[0])[:, None]
+        X = np.vstack([X_even + factor * X_odd,
+                       X_even - factor * X_odd])
+
+    return X.ravel()
+
+x = np.random.random(1024)
+np.allclose(FFT_vectorized(x), np.fft.fft(x))
